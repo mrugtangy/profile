@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Tangy's Greeting</title>
+
+  <!-- Tailwind CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Fonts & Icons -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Comfortaa:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Color+Emoji&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <style>
+    body { 
+      font-family: 'Noto Color Emoji', sans-serif;
+      font-family: 'Comfortaa', cursive;
+     }
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+    .animate-blink {
+      animation: blink 0.7s infinite;
+      height: 1em;
+      transform: translateY(0.2em);
+      width: 0.5em;
+      background: transparent;
+      border-bottom: 2px solid currentColor;
+    }
+    @media (max-width:640px) {
+      .animate-blink { height:0.8em; transform:translateY(0.15em); }
+    }
+    .fa-bluesky:before { content:"🟦"; font-style:normal; font-size:0.9em; }
+  </style>
+</head>
+<body class="bg-white min-h-screen flex flex-col items-center">
+
+  <!-- Banner + overlapping profile -->
+<div class="w-full relative">
+  <!-- Banner: full width, no cropping -->
+  <img src="img/banner.png"
+       alt="banner"
+       class="w-full h-auto object-contain">
+
+  <!-- Profile (centered, half-overlapping the bottom of the banner) -->
+  <div class="absolute left-1/2 transform -translate-x-1/2 -bottom-16 z-10">
+    <div class="w-32 h-32 sm:w-40 sm:h-40 md:w-48 md:h-48 rounded-full overflow-hidden border-2 border-white shadow-lg bg-white">
+      <img src="http://static.photos/people/200x200/42" alt="profile" class="w-full h-full object-cover">
+    </div>
+  </div>
+</div>
+
+  <!-- Content below (give room for the overlapping profile) -->
+    <div class="w-full max-w-4xl mx-auto px-4 text-center mt-10 md:mt-20">
+    <!-- Extra margin above text -->
+    <h1 class="text-3xl sm:text-4xl md:text-5xl mb-4 mt-10">hi! i'm <b>tangy.</b></h1>
+
+    <!-- Social Icons -->
+    <div class="flex justify-center flex-wrap gap-3 sm:gap-4 my-4">
+      <a href="#" class="text-black text-3xl sm:text-4xl w-10 h-10 sm:w-12 sm:h-12 flex items-center justify-center"><i class="fab fa-github"></i></a>
+      <a href="#" class="text-black text-3xl sm:text-4xl w-10 h-10 sm:w-12 sm:h-12 flex items-center justify-center"><i class="fab fa-discord"></i></a>
+      <a href="#" class="text-black text-3xl sm:text-4xl w-10 h-10 sm:w-12 sm:h-12 flex items-center justify-center"><i class="fab fa-instagram"></i></a>
+      <a href="#" class="text-black text-3xl sm:text-4xl w-10 h-10 sm:w-12 sm:h-12 flex items-center justify-center"><i class="fab fa-tiktok"></i></a>
+      <a href="#" class="text-black text-3xl sm:text-4xl w-10 h-10 sm:w-12 sm:h-12 flex items-center justify-center"><i class="fab fa-twitter"></i></a>
+      <a href="#" class="text-black text-3xl sm:text-4xl w-10 h-10 sm:w-12 sm:h-12 flex items-center justify-center"><i class="fab fa-youtube"></i></a>
+    </div>
+
+    <!-- Shuffling quote -->
+    <p id="shuffling-text" class="text-sm sm:text-base md:text-xl mt-6 mb-8 text-center min-h-[1.5em]">
+      <span id="cursor" class="inline-block ml-1 animate-blink"></span>
+    </p>
+  </div>
+
+  <!-- Buttons -->
+<section id="main-menu" class="w-full pb-10">
+  <div id="buttonArea" class="grid grid-cols-1 sm:grid-cols-3 gap-4 px-4 mx-auto max-w-3xl">
+    <button class="menu-button border-2 border-black rounded-full px-4 py-3 text-base w-full" data-menu="menu-about">about me</button>
+    <button class="menu-button border-2 border-black rounded-full px-4 py-3 text-base w-full" data-menu="menu-communities">my communities</button>
+    <button class="menu-button border-2 border-black rounded-full px-4 py-3 text-base w-full" data-menu="menu-referrals">referral links</button>
+    <button class="menu-button border-2 border-black rounded-full px-4 py-3 text-base w-full" data-menu="menu-setup">my setup</button>
+    <button class="menu-button border-2 border-black rounded-full px-4 py-3 text-base w-full" data-menu="menu-other">other links</button>
+    <button class="menu-button border-2 border-black rounded-full px-4 py-3 text-base w-full" data-menu="menu-contact">contact</button>
+  </div>
+</section>
+
+<!-- About Section -->
+<section id="menu-about" class="hidden w-full max-w-3xl mx-auto text-center p-6">
+  <h2 class="text-2xl font-bold mb-4">about me</h2>
+  <div class="text-left">
+    <p>Hi there! I’m Shivam, aka Tangy, and I’m from Mauritius 🇲🇺! (but I’ll keep exactly where a secret!).</p><br>
+    <p>I’m a tech lover who’s always tinkering with Android, Windows, Linux, and web stuff. I know some basic HTML and CSS, and I’m pretty handy with tools like WordPress.</p><br>
+    <p>I like making cool, functional websites—not for commissions, though. It’s just a hobby to learn, have fun, and sometimes kill time.</p><br>
+    <p>I’m also a gamer! I play Genshin Impact, Minecraft, Roblox, and Among Us. If you’re looking for a gaming buddy, I’m your person!</p><br>
+    <p>I also post on YouTube, TikTok, and socials, but only when I feel like it—so yeah, my socials are more “chill” than active. ;)</p><br>
+    <p>Check out this link to find my socials, the communities I manage, and more about me.</p><br>
+    <p>Need someone to talk to or advice on life stuff? Hit me up in DMs—I’m happy to help however I can!</p><br>
+  </div>
+   <button class="back-button mt-10 px-4 py-2 border border-black rounded">Back</button>
+
+</section>
+
+<!-- Communities Section -->
+<section id="menu-communities" class="hidden w-full max-w-6xl mx-auto text-center p-6">
+  <h2 class="text-2xl font-bold mb-8">my communities</h2>
+
+  <div class="grid gap-8 px-4 
+              grid-cols-1 
+              sm:grid-cols-2 
+              lg:grid-cols-3">
+
+    <!-- Community Card -->
+    <div class="bg-white border rounded-lg shadow hover:shadow-lg transition relative">
+      <!-- Banner -->
+      <div class="w-full relative">
+        <img src="https://i.imgur.com/RlC2q5J.png" 
+             alt="Realistic Reality of Reals Banner" 
+             class="w-full h-40 sm:h-48 object-cover rounded-t-lg">
+        <!-- Profile -->
+        <div class="absolute left-1/2 transform -translate-x-1/2 -bottom-10">
+          <div class="w-24 h-24 rounded-full border-2 border-white overflow-hidden shadow-lg bg-white">
+            <img src="https://i.imgur.com/QL8PcwL.png" 
+                 alt="Realistic Reality of Reals Profile" 
+                 class="w-full h-full object-cover">
+          </div>
+        </div>
+      </div>
+
+      <!-- Info -->
+      <div class="pt-14 pb-6 px-4">
+        <h3 class="text-xl font-semibold mb-1">Realistic Reality of Reals</h3>
+        <p class="text-sm text-gray-600 mb-3">
+          A cozy community where we talk about life, tech, and random things with chill vibes.
+        </p>
+        <a href="https://discord.gg/yourlink" target="_blank" 
+           class="inline-flex items-center gap-2 text-white bg-black px-4 py-2 rounded-full hover:bg-gray-800 transition">
+          <i class="fab fa-discord"></i> Join on Discord
+        </a>
+      </div>
+    </div>
+
+    <!-- Community Card -->
+    <div class="bg-white border rounded-lg shadow hover:shadow-lg transition relative">
+      <!-- Banner -->
+      <div class="w-full relative">
+        <img src="https://i.imgur.com/yyphC7b.png" 
+             alt="Tangy's Hangout Banner" 
+             class="w-full h-40 sm:h-48 object-cover rounded-t-lg">
+        <!-- Profile -->
+        <div class="absolute left-1/2 transform -translate-x-1/2 -bottom-10">
+          <div class="w-24 h-24 rounded-full border-2 border-white overflow-hidden shadow-lg bg-white">
+            <img src="https://i.imgur.com/pk34mG7.png" 
+                 alt="Tangy's Hangout Profile" 
+                 class="w-full h-full object-cover">
+          </div>
+        </div>
+      </div>
+
+      <!-- Info -->
+      <div class="pt-14 pb-6 px-4">
+        <h3 class="text-xl font-semibold mb-1">Tangy’s Hangout</h3>
+        <p class="text-sm text-gray-600 mb-3">
+          A private spot for friends, gaming, and late-night chats. Sometimes we host game nights.
+        </p>
+        <a href="https://discord.gg/anotherlink" target="_blank" 
+           class="inline-flex items-center gap-2 text-white bg-black px-4 py-2 rounded-full hover:bg-gray-800 transition">
+          <i class="fab fa-discord"></i> Join on Discord
+        </a>
+      </div>
+    </div>
+
+    <!-- Community Card Example -->
+    <div class="bg-white border rounded-lg shadow hover:shadow-lg transition relative">
+      <!-- Banner -->
+      <div class="w-full relative">
+        <img src="https://i.imgur.com/placeholder.jpg" 
+             alt="Community Banner" 
+             class="w-full h-40 sm:h-48 object-cover rounded-t-lg">
+        <!-- Profile -->
+        <div class="absolute left-1/2 transform -translate-x-1/2 -bottom-10">
+          <div class="w-24 h-24 rounded-full border-2 border-white overflow-hidden shadow-lg bg-white">
+            <img src="https://i.imgur.com/placeholder_profile.jpg" 
+                 alt="Community Profile" 
+                 class="w-full h-full object-cover">
+          </div>
+        </div>
+      </div>
+
+      <!-- Info -->
+      <div class="pt-14 pb-6 px-4">
+        <h3 class="text-xl font-semibold mb-1">Example Community</h3>
+        <p class="text-sm text-gray-600 mb-3">
+          This is an example community card that will also adapt to screen size.
+        </p>
+        <a href="#" target="_blank" 
+           class="inline-flex items-center gap-2 text-white bg-black px-4 py-2 rounded-full hover:bg-gray-800 transition">
+          <i class="fab fa-discord"></i> Join on Discord
+        </a>
+      </div>
+    </div>
+
+  </div>
+
+  <button class="back-button mt-10 px-4 py-2 border border-black rounded">Back</button>
+</section>
+
+
+<!-- Referrals Section -->
+<section id="menu-referrals" class="hidden w-full max-w-6xl mx-auto text-center p-6">
+  <h2 class="text-2xl font-bold mb-8">referral links</h2>
+
+  <div class="grid gap-8 px-4 
+              grid-cols-1 
+              sm:grid-cols-2 
+              lg:grid-cols-3">
+
+    <!-- Referrals Card -->
+    <div class="bg-white border rounded-lg shadow hover:shadow-lg transition relative">
+      <!-- Banner -->
+      <div class="w-full relative">
+        <img src="https://i.imgur.com/RlC2q5J.png" 
+             alt="Realistic Reality of Reals Banner" 
+             class="w-full h-40 sm:h-48 object-cover rounded-t-lg">
+        <!-- Profile -->
+        <div class="absolute left-1/2 transform -translate-x-1/2 -bottom-10">
+          <div class="w-24 h-24 rounded-full border-2 border-white overflow-hidden shadow-lg bg-white">
+            <img src="https://i.imgur.com/QL8PcwL.png" 
+                 alt="Realistic Reality of Reals Profile" 
+                 class="w-full h-full object-cover">
+          </div>
+        </div>
+      </div>
+
+      <!-- Info -->
+      <div class="pt-14 pb-6 px-4">
+        <h3 class="text-xl font-semibold mb-1">Realistic Reality of Reals</h3>
+        <p class="text-sm text-gray-600 mb-3">
+          A cozy community where we talk about life, tech, and random things with chill vibes.
+        </p>
+        <a href="https://discord.gg/yourlink" target="_blank" 
+           class="inline-flex items-center gap-2 text-white bg-black px-4 py-2 rounded-full hover:bg-gray-800 transition">
+          <i class="fab fa-discord"></i> Join on Discord
+        </a>
+      </div>
+    </div>
+
+    <!-- Community Card -->
+    <div class="bg-white border rounded-lg shadow hover:shadow-lg transition relative">
+      <!-- Banner -->
+      <div class="w-full relative">
+        <img src="https://i.imgur.com/yyphC7b.png" 
+             alt="Tangy's Hangout Banner" 
+             class="w-full h-40 sm:h-48 object-cover rounded-t-lg">
+        <!-- Profile -->
+        <div class="absolute left-1/2 transform -translate-x-1/2 -bottom-10">
+          <div class="w-24 h-24 rounded-full border-2 border-white overflow-hidden shadow-lg bg-white">
+            <img src="https://i.imgur.com/pk34mG7.png" 
+                 alt="Tangy's Hangout Profile" 
+                 class="w-full h-full object-cover">
+          </div>
+        </div>
+      </div>
+
+      <!-- Info -->
+      <div class="pt-14 pb-6 px-4">
+        <h3 class="text-xl font-semibold mb-1">Tangy’s Hangout</h3>
+        <p class="text-sm text-gray-600 mb-3">
+          A private spot for friends, gaming, and late-night chats. Sometimes we host game nights.
+        </p>
+        <a href="https://discord.gg/anotherlink" target="_blank" 
+           class="inline-flex items-center gap-2 text-white bg-black px-4 py-2 rounded-full hover:bg-gray-800 transition">
+          <i class="fab fa-discord"></i> Join on Discord
+        </a>
+      </div>
+    </div>
+
+    <!-- Community Card Example -->
+    <div class="bg-white border rounded-lg shadow hover:shadow-lg transition relative">
+      <!-- Banner -->
+      <div class="w-full relative">
+        <img src="https://i.imgur.com/placeholder.jpg" 
+             alt="Community Banner" 
+             class="w-full h-40 sm:h-48 object-cover rounded-t-lg">
+        <!-- Profile -->
+        <div class="absolute left-1/2 transform -translate-x-1/2 -bottom-10">
+          <div class="w-24 h-24 rounded-full border-2 border-white overflow-hidden shadow-lg bg-white">
+            <img src="https://i.imgur.com/placeholder_profile.jpg" 
+                 alt="Community Profile" 
+                 class="w-full h-full object-cover">
+          </div>
+        </div>
+      </div>
+
+      <!-- Info -->
+      <div class="pt-14 pb-6 px-4">
+        <h3 class="text-xl font-semibold mb-1">Example Community</h3>
+        <p class="text-sm text-gray-600 mb-3">
+          This is an example community card that will also adapt to screen size.
+        </p>
+        <a href="#" target="_blank" 
+           class="inline-flex items-center gap-2 text-white bg-black px-4 py-2 rounded-full hover:bg-gray-800 transition">
+          <i class="fab fa-discord"></i> Join on Discord
+        </a>
+      </div>
+    </div>
+
+  </div>
+
+  <button class="back-button mt-10 px-4 py-2 border border-black rounded">Back</button>
+</section>
+
+<!-- Setup Section -->
+<section id="menu-setup" class="hidden w-full max-w-6xl mx-auto text-center p-6">
+  <h2 class="text-2xl font-bold mb-8">my setup</h2>
+
+  <div class="grid gap-8 px-4 
+              grid-cols-1 
+              sm:grid-cols-2 
+              lg:grid-cols-3">
+
+    <!-- Setup Item 1 -->
+    <div class="bg-white border rounded-lg shadow hover:shadow-lg transition p-4">
+      <div class="w-full aspect-square overflow-hidden rounded mb-3">
+        <img src="https://images.unsplash.com/photo-1612831669680-8f67b2ef7c4b?crop=entropy&cs=tinysrgb&fit=crop&h=300&w=300" 
+             alt="EasySMX X05 Wireless Controller" 
+             class="w-full h-full object-cover">
+      </div>
+      <h3 class="text-xl font-semibold">EasySMX X05 Wireless Controller</h3>
+      <p class="text-sm mt-1">
+        A tactile keyboard with RGB lighting and durable keycaps, perfect for typing and gaming.
+      </p>
+      <div class="flex flex-col items-center mt-3 gap-2">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/a/a6/Temu_logo.svg/768px-Temu_logo.svg.png" 
+             alt="Store Logo" class="h-5 object-contain">
+      </div>
+    </div>
+
+    <!-- Setup Item 2 -->
+    <div class="bg-white border rounded-lg shadow hover:shadow-lg transition p-4">
+      <div class="w-full aspect-square overflow-hidden rounded mb-3">
+        <img src="https://images.unsplash.com/photo-1581093588401-34577a4b9f87?crop=entropy&cs=tinysrgb&fit=crop&h=300&w=300" 
+             alt="Wireless Mouse" 
+             class="w-full h-full object-cover">
+      </div>
+      <h3 class="text-xl font-semibold">Wireless Mouse</h3>
+      <p class="text-sm mt-1">
+        Ergonomic wireless mouse with long battery life and precision tracking for productivity and gaming.
+      </p>
+      <div class="flex flex-col items-center mt-3 gap-2">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/a/a6/Temu_logo.svg/768px-Temu_logo.svg.png" 
+             alt="Store Logo" class="h-5 object-contain">
+      </div>
+    </div>
+
+    <!-- Setup Item 3 -->
+    <div class="bg-white border rounded-lg shadow hover:shadow-lg transition p-4">
+      <div class="w-full aspect-square overflow-hidden rounded mb-3">
+        <img src="https://images.unsplash.com/photo-1600180758896-bdcd3e9e5140?crop=entropy&cs=tinysrgb&fit=crop&h=300&w=300" 
+             alt="Gaming Headset" 
+             class="w-full h-full object-cover">
+      </div>
+      <h3 class="text-xl font-semibold">Gaming Headset</h3>
+      <p class="text-sm mt-1">
+        Comfortable headset with surround sound, noise cancellation, and crystal-clear microphone quality.
+      </p>
+      <div class="flex flex-col items-center mt-3 gap-2">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/a/a6/Temu_logo.svg/768px-Temu_logo.svg.png" 
+             alt="Store Logo" class="h-5 object-contain">
+      </div>
+    </div>
+
+    <!-- Setup Item 4 -->
+    <div class="bg-white border rounded-lg shadow hover:shadow-lg transition p-4">
+      <div class="w-full aspect-square overflow-hidden rounded mb-3">
+        <img src="https://images.unsplash.com/photo-1606813903780-8c0bdbffcf0d?crop=entropy&cs=tinysrgb&fit=crop&h=300&w=300" 
+             alt="Gaming Monitor" 
+             class="w-full h-full object-cover">
+      </div>
+      <h3 class="text-xl font-semibold">Gaming Monitor</h3>
+      <p class="text-sm mt-1">
+        27-inch monitor with 144Hz refresh rate and ultra-fast response time for smooth gaming.
+      </p>
+      <div class="flex flex-col items-center mt-3 gap-2">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/a/a6/Temu_logo.svg/768px-Temu_logo.svg.png" 
+             alt="Store Logo" class="h-5 object-contain">
+      </div>
+    </div>
+
+  </div>
+
+  <button class="back-button mt-10 px-4 py-2 border border-black rounded">Back</button>
+</section>
+
+<!-- Other Section -->
+<section id="menu-other" class="hidden w-full max-w-3xl mx-auto text-center p-6 bg-gray-100 rounded-lg shadow-lg">
+  <h2 class="text-2xl font-bold mb-4">Other Links Menu</h2>
+  <p>This is the other links menu content.</p>
+  <button class="back-button mt-4 px-4 py-2 border border-black rounded">Back</button>
+</section>
+
+<!-- Contact Section -->
+<section id="menu-contact" class="hidden w-full max-w-3xl mx-auto text-center p-6 bg-gray-100 rounded-lg shadow-lg">
+  <h2 class="text-2xl font-bold mb-4">Contact Menu</h2>
+  <p>This is the contact menu content.</p>
+  <button class="back-button mt-4 px-4 py-2 border border-black rounded">Back</button>
+</section>
+
+<!-- JS -->
+<script>
+const menuButtons = document.querySelectorAll(".menu-button");
+const buttonArea = document.getElementById("buttonArea");
+const menus = document.querySelectorAll("[id^='menu-']");
+const backButtons = document.querySelectorAll(".back-button");
+
+function openSectionById(menuId) {
+    buttonArea.classList.add("hidden");
+    menus.forEach(menu => menu.classList.add("hidden"));
+    const targetMenu = document.getElementById(menuId);
+    if (targetMenu) targetMenu.classList.remove("hidden");
+}
+
+menuButtons.forEach(button => {
+    button.addEventListener("click", () => {
+        const menuId = button.getAttribute("data-menu");
+        openSectionById(menuId);
+        window.location.hash = menuId; // Change URL hash
+    });
+});
+
+backButtons.forEach(button => {
+    button.addEventListener("click", () => {
+        menus.forEach(menu => menu.classList.add("hidden"));
+        buttonArea.classList.remove("hidden");
+
+        // Clear the hash without causing scroll
+        history.pushState("", document.title, window.location.pathname + window.location.search);
+
+        window.location.hash = ""; // optional extra safety
+    });
+});
+
+
+// On page load, open section if hash exists
+window.addEventListener("DOMContentLoaded", () => {
+    const hash = window.location.hash.replace("#", "");
+    if (hash) {
+        openSectionById(hash);
+    }
+});
+</script>
+
+
+
+  <!-- Typing JS (unchanged) -->
+  <script>
+    const quotes = [
+      "not sure if siddy is gonna see this 🤭",
+      "luv u ma siddy mwahhh 😘",
+      "delulu is the solulu!",
+      "cause you're my pretty...",
+      "mium 😋"
+    ];
+    let currentQuote = 0;
+    const textElement = document.getElementById('shuffling-text');
+    function typeWriter(text, element, speed, callback) {
+      let i = 0;
+      element.textContent = '';
+      function typing() {
+        if (i < text.length) {
+          element.innerHTML = text.substring(0, i) +
+            '<span class="text-black">' + text.charAt(i) + '</span>';
+          i++;
+          setTimeout(typing, speed);
+        } else if (callback) {
+          element.innerHTML = text;
+          setTimeout(callback, 1000);
+        }
+      }
+      typing();
+    }
+    function shuffleQuotes() {
+      typeWriter(quotes[currentQuote], textElement, 50, () => {
+        currentQuote = (currentQuote + 1) % quotes.length;
+        setTimeout(shuffleQuotes, 1000);
+      });
+    }
+    shuffleQuotes();
+  </script>
+  <!-- Easter egg text -->
+<div class="w-full flex flex-col items-center mt-10 text-4xl">
+  <p id="clickElement" class="cursor-pointer text-black">
+    ...
+  </p>
+
+  <div id="displayTexts" class="mt-4 flex flex-col items-center gap-1 text-sm text-gray-700">
+    <span id="text1" class="hidden">#life</span>
+    <span id="text2" class="hidden">#quote</span>
+    <span id="text3" class="hidden">#love</span>
+    <span id="text4" class="hidden">:)</span>
+  </div>
+</div>
+
+<script>
+  let clickCount = 0;
+  const clickElement = document.getElementById("clickElement");
+  const texts = [
+    document.getElementById("text1"),
+    document.getElementById("text2"),
+    document.getElementById("text3"),
+    document.getElementById("text4"),
+  ];
+
+  clickElement.addEventListener("click", () => {
+    if (clickCount < 3) {
+      // Hide all texts except the one for this click
+      texts.forEach(text => text.classList.add("hidden"));
+      texts[clickCount].classList.remove("hidden");
+      clickCount++;
+    }
+
+    if (clickCount === 3) {
+      // On third click, show third text and then after 2 seconds show ":)"
+      texts.forEach(text => text.classList.add("hidden"));
+      texts[2].classList.remove("hidden"); // Show #love
+
+      setTimeout(() => {
+        texts[2].classList.add("hidden"); // Hide #love
+        texts[3].classList.remove("hidden"); // Show :)
+
+        // Redirect after 3 seconds
+        setTimeout(() => {
+          window.location.href = "https://instagram.com/oc_qte/"; // Change URL here
+        }, 3000);
+
+      }, 2000);
+    }
+  });
+</script>
+
+</body>
+<footer class="w-full bg-white text-black py-6 mt-10">
+  <div class="max-w-4xl mx-auto px-4 text-center">
+    <p class="text-sm sm:text-base">made with 🖤 by tangy</p>
+    <img src="img/logo_tangy.png" alt="logo" class="h-8 mx-auto mt-2">
+  </div>
+</footer>
+</html>
