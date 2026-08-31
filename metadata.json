@@ -1,0 +1,6 @@
+{
+  "name": "Tangy's Greeting",
+  "description": "A personal portfolio and link hub for Tangy, featuring interactive sections and a clean aesthetic.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

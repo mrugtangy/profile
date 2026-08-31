@@ -1,0 +1,128 @@
+{
+  "entities": {
+    "ProfileConfig": {
+      "title": "Profile Configuration",
+      "description": "Configuration for the digital identity card",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "systemId": { "type": "string" },
+        "country": { "type": "string" },
+        "birthDate": { "type": "string", "format": "date" },
+        "status": { "type": "string" },
+        "interests": { "type": "array", "items": { "type": "string" } },
+        "skills": { "type": "array", "items": { "type": "string" } },
+        "games": { "type": "array", "items": { "type": "string" } },
+        "footerQuote": { "type": "string" }
+      }
+    },
+    "CollectionItem": {
+      "title": "Collection Item",
+      "description": "Schema for cards in links, referrals, and communities",
+      "type": "object",
+      "properties": {
+        "banner": { "type": "string" },
+        "profile": { "type": "string" },
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "link": { "type": "string" }
+      }
+    },
+    "CryptoMethod": {
+      "title": "Crypto Donation Method",
+      "type": "object",
+      "properties": {
+        "network": { "type": "string" },
+        "address": { "type": "string" },
+        "qrCode": { "type": "string" }
+      }
+    },
+    "LocalMethod": {
+      "title": "Local Donation Method",
+      "type": "object",
+      "properties": {
+        "provider": { "type": "string" },
+        "qrCode": { "type": "string" }
+      }
+    },
+    "DonationsConfig": {
+      "title": "Donation Configuration",
+      "type": "object",
+      "properties": {
+        "cryptoDescription": { "type": "string" },
+        "crypto": { "type": "array", "items": { "$ref": "CryptoMethod" } },
+        "localMethods": { "type": "array", "items": { "$ref": "LocalMethod" } },
+        "other": {
+          "type": "object",
+          "properties": {
+            "paypal": { "type": "string" },
+            "buyMeACoffee": { "type": "string" },
+            "koFi": { "type": "string" }
+          }
+        }
+      }
+    },
+    "AppConfig": {
+      "title": "Application Configuration",
+      "description": "Global application configuration",
+      "type": "object",
+      "properties": {
+        "profileConfig": { "$ref": "ProfileConfig" },
+        "quotes": { "type": "array", "items": { "type": "string" } },
+        "mainPage": {
+          "type": "object",
+          "properties": {
+            "pfp": { "type": "string" },
+            "banner": { "type": "string" },
+            "title": { "type": "string" }
+          }
+        },
+        "communities": { "type": "array", "items": { "$ref": "CollectionItem" } },
+        "referrals": { "type": "array", "items": { "$ref": "CollectionItem" } },
+        "links": { "type": "array", "items": { "$ref": "CollectionItem" } },
+        "donations": { "$ref": "DonationsConfig" },
+        "contact": {
+          "type": "object",
+          "properties": {
+            "email": { "type": "string" },
+            "telegram": { "type": "string" },
+            "description": { "type": "string" }
+          }
+        },
+        "design": {
+          "type": "object",
+          "properties": {
+            "primaryColor": { "type": "string" },
+            "accentColor": { "type": "string" },
+            "backgroundColor": { "type": "string" },
+            "cardStyle": { "type": "string", "enum": ["sharp", "rounded", "neo"] }
+          }
+        }
+      }
+    },
+    "Message": {
+      "title": "Contact Message",
+      "description": "Message sent via the direct inbox contact form",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "email": { "type": "string" },
+        "subject": { "type": "string" },
+        "message": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "read": { "type": "boolean" }
+      },
+      "required": ["name", "email", "subject", "message", "createdAt"]
+    }
+  },
+  "firestore": {
+    "/settings/config": {
+      "schema": "AppConfig",
+      "description": "The primary configuration document for the application"
+    },
+    "/messages/{messageId}": {
+      "schema": "Message",
+      "description": "Collection of incoming contact messages"
+    }
+  }
+}

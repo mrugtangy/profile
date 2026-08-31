@@ -1,0 +1,30 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Default deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Helper functions
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return isSignedIn() && (request.auth.token.email == 'shivamkumarsumoreeah@gmail.com' || request.auth.token.email == 'hello.shivamksu@gmail.com');
+    }
+
+    // Settings collection
+    match /settings/{documentId} {
+      allow read: if true; // Everyone can read the config
+      allow write: if isAdmin();
+    }
+
+    // Messages collection
+    match /messages/{documentId} {
+      allow create: if true; // Anyone can send a message
+      allow read, update, delete: if isAdmin(); // Only admins can read/manage messages
+    }
+  }
+}
