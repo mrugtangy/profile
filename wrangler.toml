@@ -11,3 +11,7 @@ command = "npm run build"
 
 [vars]
 NODE_ENV = "production"
+
+# Direct Cloudflare Workers to serve built static assets from ./dist
+[assets]
+directory = "./dist"
