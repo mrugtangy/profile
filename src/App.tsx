@@ -27,7 +27,8 @@ import {
   BrowserRouter, 
   Routes, 
   Route, 
-  Navigate 
+  Navigate,
+  Link
 } from "react-router-dom";
 import { onAuthStateChanged, User as FirebaseUser } from "firebase/auth";
 import { auth, db } from "./firebase";
@@ -859,6 +860,19 @@ function MainApp({ config, loading, user }: { config: any, loading: boolean, use
   const [selectedCard, setSelectedCard] = useState<any>(null);
   const [easterEggCount, setEasterEggCount] = useState(0);
   const [easterEggPhase, setEasterEggPhase] = useState<"dots" | "life" | "quote" | "love" | "smile">("dots");
+  const [isAdminLoggedIn, setIsAdminLoggedIn] = useState(false);
+
+  useEffect(() => {
+    const checkAdmin = async () => {
+      try {
+        const adminUser = await authService.getCurrentUser();
+        setIsAdminLoggedIn(!!adminUser);
+      } catch {
+        setIsAdminLoggedIn(false);
+      }
+    };
+    checkAdmin();
+  }, []);
 
   const handleEasterEgg = useCallback(() => {
     if (easterEggCount === 0) {
@@ -892,11 +906,13 @@ function MainApp({ config, loading, user }: { config: any, loading: boolean, use
 
   return (
     <div className="min-h-screen flex flex-col items-center overflow-x-hidden transition-colors duration-500 bg-white relative">
-      <div className="absolute top-4 right-4 z-50">
-        <a href="/admin" className="px-4 py-2 bg-black text-white rounded-xl text-xs font-black uppercase tracking-widest hover:scale-105 transition-transform border-2 border-white shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
-          Admin Panel
-        </a>
-      </div>
+      {isAdminLoggedIn && (
+        <div className="absolute top-4 right-4 z-50">
+          <Link to="/admin" className="px-4 py-2 bg-black text-white rounded-xl text-xs font-black uppercase tracking-widest hover:scale-105 transition-transform border-2 border-white shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
+            Admin Panel
+          </Link>
+        </div>
+      )}
       
       {/* PERSISTENT TOP SECTION */}
       <div className="w-full relative shrink-0">
