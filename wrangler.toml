@@ -1,0 +1,11 @@
+name = "profile"
+main = "server.ts"
+compatibility_date = "2024-09-01"
+compatibility_flags = ["nodejs_compat"]
+
+[site]
+bucket = "./dist"
+
+# Enable Node.js compatibility mode for MongoDB and server packages
+[vars]
+NODE_ENV = "production"
