@@ -20,11 +20,5 @@ service cloud.firestore {
       allow read: if true; // Everyone can read the config
       allow write: if isAdmin();
     }
-
-    // Messages collection
-    match /messages/{documentId} {
-      allow create: if true; // Anyone can send a message
-      allow read, update, delete: if isAdmin(); // Only admins can read/manage messages
-    }
   }
 }

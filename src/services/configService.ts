@@ -1,58 +1,73 @@
+import { doc, getDoc, setDoc, onSnapshot } from 'firebase/firestore';
+import { db } from '../firebase';
 import { INITIAL_CONFIG } from '../constants';
-import { authService } from './authService';
 
+const SETTINGS_DOC_PATH = 'settings/config';
 const CACHE_KEY = 'app_settings_cache';
+
+export enum OperationType {
+  CREATE = 'create',
+  UPDATE = 'update',
+  DELETE = 'delete',
+  LIST = 'list',
+  GET = 'get',
+  WRITE = 'write',
+}
+
+interface FirestoreErrorInfo {
+  error: string;
+  operationType: OperationType;
+  path: string | null;
+  authInfo: any;
+}
+
+function handleFirestoreError(error: unknown, operationType: OperationType, path: string | null) {
+  console.error('Firestore Error: ', error);
+  throw error;
+}
 
 export const fetchSettings = async () => {
   try {
-    const res = await fetch('/api/settings');
-    if (res.ok) {
-      const data = await res.json();
-      if (data) {
-        localStorage.setItem(CACHE_KEY, JSON.stringify(data));
-        return data;
-      }
+    const docRef = doc(db, SETTINGS_DOC_PATH);
+    const docSnap = await getDoc(docRef);
+    if (docSnap.exists()) {
+      const data = docSnap.data();
+      localStorage.setItem(CACHE_KEY, JSON.stringify(data));
+      return data;
+    } else {
+      await setDoc(docRef, INITIAL_CONFIG);
+      localStorage.setItem(CACHE_KEY, JSON.stringify(INITIAL_CONFIG));
+      return INITIAL_CONFIG;
     }
   } catch (error) {
-    console.warn('Failed to fetch settings from API, falling back to cache:', error);
-  }
-
-  // Fallback to cache if offline or unconfigured
-  const cachedData = localStorage.getItem(CACHE_KEY);
-  if (cachedData) {
-    try {
-      return JSON.parse(cachedData);
-    } catch (e) {
-      console.warn('Invalid cache data', e);
+    // Fallback to cache if offline
+    const cachedData = localStorage.getItem(CACHE_KEY);
+    if (cachedData) {
+      try {
+        return JSON.parse(cachedData);
+      } catch (e) {
+        console.warn('Invalid cache data', e);
+      }
     }
+    handleFirestoreError(error, OperationType.GET, SETTINGS_DOC_PATH);
   }
-
-  return INITIAL_CONFIG;
 };
 
 export const updateSettings = async (data: any) => {
-  const headers = {
-    'Content-Type': 'application/json',
-    ...authService.getAuthHeaders(),
-  };
-
-  const res = await fetch('/api/settings', {
-    method: 'POST',
-    headers,
-    body: JSON.stringify(data),
-  });
-
-  if (!res.ok) {
-    const errData = await res.json().catch(() => ({}));
-    throw new Error(errData.error || 'Failed to update settings');
+  try {
+    const docRef = doc(db, SETTINGS_DOC_PATH);
+    await setDoc(docRef, data, { merge: true });
+    // Optimistically update cache
+    localStorage.setItem(CACHE_KEY, JSON.stringify(data));
+  } catch (error) {
+    handleFirestoreError(error, OperationType.WRITE, SETTINGS_DOC_PATH);
   }
-
-  // Optimistically update cache
-  localStorage.setItem(CACHE_KEY, JSON.stringify(data));
 };
 
 export const subscribeToSettings = (callback: (data: any) => void) => {
-  // Immediately serve from cache if available
+  const docRef = doc(db, SETTINGS_DOC_PATH);
+  
+  // Immediately serve from cache (adaptable cache system)
   const cachedData = localStorage.getItem(CACHE_KEY);
   if (cachedData) {
     try {
@@ -62,24 +77,16 @@ export const subscribeToSettings = (callback: (data: any) => void) => {
     }
   }
 
-  let isMounted = true;
-
-  const loadLatest = async () => {
-    try {
-      const data = await fetchSettings();
-      if (isMounted && data) {
-        callback(data);
-      }
-    } catch {}
-  };
-
-  loadLatest();
-
-  // Poll every 5 seconds for updates
-  const interval = setInterval(loadLatest, 5000);
-
-  return () => {
-    isMounted = false;
-    clearInterval(interval);
-  };
+  return onSnapshot(docRef, (doc) => {
+    if (doc.exists()) {
+      const data = doc.data();
+      localStorage.setItem(CACHE_KEY, JSON.stringify(data));
+      callback(data);
+    } else {
+      localStorage.setItem(CACHE_KEY, JSON.stringify(INITIAL_CONFIG));
+      callback(INITIAL_CONFIG);
+    }
+  }, (error) => {
+    handleFirestoreError(error, OperationType.GET, SETTINGS_DOC_PATH);
+  });
 };

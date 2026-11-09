@@ -1,22 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import { auth, db } from '../../firebase';
+import { auth } from '../../firebase';
 import { signOut } from 'firebase/auth';
 import { fetchSettings, subscribeToSettings, updateSettings } from '../../services/configService';
 import { INITIAL_CONFIG, EXAMPLE_CONFIG } from '../../constants';
-import { collection, query, orderBy, onSnapshot, doc, updateDoc, deleteDoc } from 'firebase/firestore';
 import { motion, AnimatePresence } from 'motion/react';
 import { useNavigate } from 'react-router-dom';
 import { 
   Save, LogOut, Settings, User, Hash, Globe, Calendar, Heart, Folder,
   List, Code, Gamepad2, Quote, Image as ImageIcon, Layout, 
   ExternalLink, Mail, Send, Type, Sparkles, ChevronRight,
-  Plus, Trash2, Eye, Upload, X, ShieldAlert, Home, ChevronUp, ChevronDown, GripVertical, Lock, Copy, File as FileIcon, Check,
-  Inbox, MailOpen, Users, Database, UserCheck
+  Plus, Trash2, Eye, Upload, X, ShieldAlert, Home, ChevronUp, ChevronDown, GripVertical, Lock, Copy, File as FileIcon, Check
 } from 'lucide-react';
-import { authService } from '../../services/authService';
-import { AdminsManager } from './AdminsManager';
-import { DatabaseConfigEditor } from './DatabaseConfigEditor';
-import { AccountSettingsEditor } from './AccountSettingsEditor';
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 import Markdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -270,7 +264,7 @@ const GoogleAdsTester = ({ clientId }: { clientId: string }) => {
   );
 };
 
-type AdminSection = 'main' | 'persona' | 'collections' | 'contact' | 'donations' | 'quotes' | 'errors' | 'files' | 'configs' | 'messages' | 'redirects' | 'admins' | 'database' | 'account';
+type AdminSection = 'main' | 'persona' | 'collections' | 'contact' | 'donations' | 'quotes' | 'errors' | 'files' | 'configs' | 'redirects';
 
 import { FileManager } from './FileManager';
 import { RedirectsEditor } from './RedirectsEditor';
@@ -278,31 +272,19 @@ import { RedirectsEditor } from './RedirectsEditor';
 export const AdminPanel: React.FC = () => {
   const navigate = useNavigate();
   const [activeSection, setActiveSection] = useState<AdminSection>('main');
-  const [adminUser, setAdminUser] = useState<any | null>(null);
   const [config, setConfig] = useState<any>(INITIAL_CONFIG);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
 
-  const [inboxMessages, setInboxMessages] = useState<any[]>([]);
-  const [loadingMessages, setLoadingMessages] = useState(true);
-  const [selectedMessage, setSelectedMessage] = useState<any | null>(null);
-  const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
-
   useEffect(() => {
-    const checkAuthAndLoadSettings = async () => {
+    const loadSettings = async () => {
       try {
-        const user = await authService.getCurrentUser();
-        if (!user) {
-          navigate('/admin/login');
-          return;
-        }
-        setAdminUser(user);
-
         const data = await fetchSettings();
         if (data) {
           setConfig((prev: any) => {
             const merged = { ...prev, ...data };
+            // Ensure donations structure is fully populated with defaults for missing keys
             merged.donations = {
               ...INITIAL_CONFIG.donations,
               ...(data.donations || {})
@@ -311,73 +293,13 @@ export const AdminPanel: React.FC = () => {
           });
         }
       } catch (err) {
-        console.error("Failed to load admin panel:", err);
+        console.error("Failed to load settings:", err);
       } finally {
         setLoading(false);
       }
     };
-    checkAuthAndLoadSettings();
+    loadSettings();
   }, []);
-
-  useEffect(() => {
-    const messagesQuery = query(collection(db, 'messages'), orderBy('createdAt', 'desc'));
-    const unsubscribe = onSnapshot(messagesQuery, (snapshot) => {
-      const msgs = snapshot.docs.map(doc => {
-        const data = doc.data();
-        return {
-          id: doc.id,
-          ...data,
-          createdAt: data.createdAt?.toDate ? data.createdAt.toDate() : data.createdAt ? new Date(data.createdAt) : new Date()
-        };
-      });
-      setInboxMessages(msgs);
-      setLoadingMessages(false);
-    }, (error) => {
-      console.error("Error subscribing to messages: ", error);
-      setLoadingMessages(false);
-    });
-
-    return () => unsubscribe();
-  }, []);
-
-  const handleViewMessage = async (msg: any) => {
-    setSelectedMessage(msg);
-    if (!msg.read) {
-      try {
-        await updateDoc(doc(db, 'messages', msg.id), { read: true });
-      } catch (err) {
-        console.error("Failed to mark message as read:", err);
-      }
-    }
-  };
-
-  const handleDeleteMessage = (id: string, e?: React.MouseEvent) => {
-    if (e) e.stopPropagation();
-    setDeleteConfirmId(id);
-  };
-
-  const executeDeleteMessage = async () => {
-    if (!deleteConfirmId) return;
-    try {
-      await deleteDoc(doc(db, 'messages', deleteConfirmId));
-      if (selectedMessage?.id === deleteConfirmId) {
-        setSelectedMessage(null);
-      }
-    } catch (err) {
-      console.error("Failed to delete message:", err);
-    } finally {
-      setDeleteConfirmId(null);
-    }
-  };
-
-  const toggleReadStatus = async (msg: any, e: React.MouseEvent) => {
-    e.stopPropagation();
-    try {
-      await updateDoc(doc(db, 'messages', msg.id), { read: !msg.read });
-    } catch (err) {
-      console.error("Failed to toggle read status:", err);
-    }
-  };
 
   const handleSave = async () => {
     setSaving(true);
@@ -437,7 +359,6 @@ export const AdminPanel: React.FC = () => {
   };
 
   const SidebarItem = ({ id, label, icon: Icon }: { id: AdminSection, label: string, icon: any }) => {
-    const unreadCount = id === 'messages' ? inboxMessages.filter((m: any) => !m.read).length : 0;
     return (
       <button
         onClick={() => setActiveSection(id)}
@@ -445,11 +366,6 @@ export const AdminPanel: React.FC = () => {
       >
         <Icon size={18} />
         <span>{label}</span>
-        {unreadCount > 0 && (
-          <span className="ml-2 px-2 py-0.5 text-[10px] bg-red-500 text-white rounded-full font-black flex items-center justify-center min-w-[18px] animate-pulse">
-            {unreadCount}
-          </span>
-        )}
         {activeSection === id && <ChevronRight size={16} className="ml-auto" />}
       </button>
     );
@@ -473,7 +389,7 @@ export const AdminPanel: React.FC = () => {
         <div className="px-1">
           <div className="p-4 bg-neutral-50 rounded-2xl border-2 border-neutral-100 mb-4">
             <p className="text-[10px] font-black uppercase text-neutral-400 tracking-widest mb-1">Status: Active</p>
-            <h3 className="text-lg font-black text-black">Hi {adminUser?.username || 'Admin'}! 👋</h3>
+            <h3 className="text-lg font-black text-black">Hi Admin! 👋</h3>
           </div>
 
           <button 
@@ -491,22 +407,15 @@ export const AdminPanel: React.FC = () => {
           <SidebarItem id="files" label="File Manager" icon={Folder} />
           <SidebarItem id="donations" label="Donations" icon={Heart} />
           <SidebarItem id="contact" label="Contact" icon={Mail} />
-          <SidebarItem id="messages" label="Inbox Messages" icon={Inbox} />
           <SidebarItem id="redirects" label="Direct Links" icon={ExternalLink} />
           <SidebarItem id="collections" label="Explore Sections" icon={Sparkles} />
           <SidebarItem id="quotes" label="Quotes" icon={Quote} />
           <SidebarItem id="errors" label="Error Pages" icon={ShieldAlert} />
           <SidebarItem id="configs" label="Configs" icon={Settings} />
-          <SidebarItem id="admins" label="Administrators" icon={Users} />
-          <SidebarItem id="database" label="Database Config" icon={Database} />
-          <SidebarItem id="account" label="Account Settings" icon={UserCheck} />
         </nav>
 
         <button 
-          onClick={() => {
-            authService.removeToken();
-            navigate('/admin/login');
-          }}
+          onClick={() => signOut(auth)}
           className="flex items-center gap-2 px-4 py-3 bg-red-50 text-red-600 hover:bg-red-100 rounded-xl transition-colors text-xs font-black uppercase tracking-widest mt-auto"
         >
           <LogOut size={16} />
@@ -1327,186 +1236,6 @@ export const AdminPanel: React.FC = () => {
                 </div>
               )}
 
-
-
-              {/* --- MESSAGES SECTION --- */}
-              {activeSection === 'messages' && (
-                <div className="space-y-6">
-                  <header className="flex justify-between items-center flex-wrap gap-4">
-                    <div>
-                      <h2 className="text-3xl font-black uppercase tracking-tighter flex items-center gap-2">
-                        <Inbox size={28} /> Direct Inbox Messages
-                      </h2>
-                      <p className="text-neutral-400 text-sm font-medium">Read and manage inquiries from your digital business card.</p>
-                    </div>
-                  </header>
-
-                  <div className="bg-white border-2 border-black rounded-3xl p-6 sm:p-8 space-y-6 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
-                    {loadingMessages ? (
-                      <div className="py-20 flex items-center justify-center">
-                        <div className="w-8 h-8 border-4 border-black border-t-transparent rounded-full animate-spin" />
-                      </div>
-                    ) : inboxMessages.length === 0 ? (
-                      <div className="py-16 text-center border-2 border-dashed border-neutral-100 rounded-3xl">
-                        <div className="w-12 h-12 bg-neutral-50 text-neutral-400 rounded-full flex items-center justify-center border-2 border-neutral-100 mx-auto mb-4">
-                          <MailOpen size={24} />
-                        </div>
-                        <h4 className="text-base font-black uppercase tracking-wider text-neutral-800">Inbox is empty</h4>
-                        <p className="text-neutral-400 text-sm font-medium italic mt-1">When users send you messages, they'll appear here.</p>
-                      </div>
-                    ) : (
-                      <div className="space-y-4">
-                        <div className="flex justify-between items-center border-b-2 border-neutral-100 pb-4 flex-wrap gap-2">
-                          <span className="text-[10px] font-black uppercase text-neutral-400 tracking-widest">
-                            Total: {inboxMessages.length} message(s) ({inboxMessages.filter(m => !m.read).length} unread)
-                          </span>
-                        </div>
-
-                        <div className="divide-y divide-neutral-100 max-h-[60vh] overflow-y-auto pr-2 space-y-3">
-                          {inboxMessages.map((msg) => (
-                            <div 
-                              key={msg.id}
-                              onClick={() => handleViewMessage(msg)}
-                              className={`p-4 rounded-2xl border-2 transition-all cursor-pointer flex flex-col md:flex-row md:items-center justify-between gap-4 text-left group ${
-                                !msg.read 
-                                  ? 'bg-neutral-50/50 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]' 
-                                  : 'bg-white border-neutral-100 hover:border-neutral-300'
-                              }`}
-                            >
-                              <div className="space-y-1 flex-1 min-w-0">
-                                <div className="flex items-center gap-2 flex-wrap">
-                                  <span className={`text-xs uppercase tracking-wider font-mono px-2 py-0.5 rounded-md ${
-                                    !msg.read ? 'bg-red-50 text-red-500 font-bold' : 'bg-neutral-100 text-neutral-500'
-                                  }`}>
-                                    {!msg.read ? 'New' : 'Read'}
-                                  </span>
-                                  <h4 className="font-bold text-sm text-neutral-800 truncate max-w-[200px]">{msg.name}</h4>
-                                  <span className="text-[10px] font-medium text-neutral-400">&lt;{msg.email}&gt;</span>
-                                </div>
-                                <h3 className="font-black text-sm text-black truncate">{msg.subject}</h3>
-                                <p className="text-neutral-400 text-xs truncate max-w-xl">{msg.message}</p>
-                              </div>
-
-                              <div className="flex items-center gap-4 shrink-0 justify-between md:justify-end">
-                                <span className="text-[10px] font-mono text-neutral-400">
-                                  {msg.createdAt.toLocaleDateString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
-                                </span>
-                                
-                                <div className="flex items-center gap-2 opacity-100 md:opacity-0 group-hover:opacity-100 transition-opacity">
-                                  <button
-                                    onClick={(e) => toggleReadStatus(msg, e)}
-                                    title={msg.read ? "Mark as unread" : "Mark as read"}
-                                    className="p-2 hover:bg-neutral-100 text-neutral-500 hover:text-black rounded-lg transition-colors border border-transparent hover:border-neutral-200"
-                                  >
-                                    <MailOpen size={16} />
-                                  </button>
-                                  <button
-                                    onClick={(e) => handleDeleteMessage(msg.id, e)}
-                                    title="Delete Message"
-                                    className="p-2 hover:bg-red-50 text-neutral-400 hover:text-red-500 rounded-lg transition-colors"
-                                  >
-                                    <Trash2 size={16} />
-                                  </button>
-                                </div>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Message Detail Modal popup */}
-                  <AnimatePresence>
-                    {selectedMessage && (
-                      <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-                        <motion.div
-                          initial={{ opacity: 0 }}
-                          animate={{ opacity: 1 }}
-                          exit={{ opacity: 0 }}
-                          onClick={() => setSelectedMessage(null)}
-                          className="absolute inset-0 bg-black/50 backdrop-blur-sm cursor-pointer"
-                        />
-                        <motion.div
-                          initial={{ opacity: 0, scale: 0.95 }}
-                          animate={{ opacity: 1, scale: 1 }}
-                          exit={{ opacity: 0, scale: 0.95 }}
-                          className="relative w-full max-w-lg bg-white rounded-3xl p-6 sm:p-8 border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] flex flex-col z-10 text-left"
-                          onClick={(e) => e.stopPropagation()}
-                        >
-                          <button 
-                            onClick={() => setSelectedMessage(null)}
-                            className="absolute top-4 right-4 p-2 hover:bg-neutral-100 rounded-lg transition-colors"
-                          >
-                            <X size={20} />
-                          </button>
-
-                          <div className="space-y-6">
-                            <div className="border-b-2 border-neutral-100 pb-4">
-                              <span className="text-[9px] font-black uppercase text-red-500 tracking-widest font-mono">
-                                Incoming Message
-                              </span>
-                              <h3 className="text-xl font-black text-black leading-tight mt-1">{selectedMessage.subject}</h3>
-                            </div>
-
-                            <div className="grid grid-cols-2 gap-4 bg-neutral-50 p-4 rounded-2xl border border-neutral-100 text-xs">
-                              <div>
-                                <span className="text-[9px] font-black uppercase text-neutral-400 tracking-widest block font-mono">From Name</span>
-                                <span className="font-bold text-neutral-800">{selectedMessage.name}</span>
-                              </div>
-                              <div>
-                                <span className="text-[9px] font-black uppercase text-neutral-400 tracking-widest block font-mono">Sent Date</span>
-                                <span className="font-mono text-neutral-500">
-                                  {selectedMessage.createdAt.toLocaleDateString(undefined, { 
-                                    year: 'numeric', month: 'short', day: 'numeric', 
-                                    hour: '2-digit', minute: '2-digit' 
-                                  })}
-                                </span>
-                              </div>
-                              <div className="col-span-2">
-                                <span className="text-[9px] font-black uppercase text-neutral-400 tracking-widest block font-mono">From Email</span>
-                                <div className="flex items-center gap-2 mt-0.5">
-                                  <span className="font-mono font-bold text-neutral-800 break-all select-all">{selectedMessage.email}</span>
-                                  <button
-                                    onClick={() => navigator.clipboard.writeText(selectedMessage.email)}
-                                    className="p-1 text-neutral-400 hover:text-black hover:bg-neutral-200 rounded transition-colors"
-                                    title="Copy Email"
-                                  >
-                                    <Copy size={12} />
-                                  </button>
-                                </div>
-                              </div>
-                            </div>
-
-                            <div>
-                              <span className="text-[9px] font-black uppercase text-neutral-400 tracking-widest block font-mono mb-2">Message Content</span>
-                              <div className="p-4 bg-neutral-50/50 rounded-2xl border border-neutral-100 min-h-[120px] whitespace-pre-wrap text-sm leading-relaxed text-neutral-800 font-medium">
-                                {selectedMessage.message}
-                              </div>
-                            </div>
-
-                            <div className="flex gap-3 pt-2">
-                              <a
-                                href={`mailto:${selectedMessage.email}?subject=Re: ${encodeURIComponent(selectedMessage.subject)}`}
-                                className="flex-1 py-3 bg-black text-white hover:bg-neutral-800 rounded-xl text-xs font-black uppercase tracking-widest text-center flex items-center justify-center gap-2 transition-transform active:scale-95 hover:scale-105"
-                              >
-                                <Send size={14} /> Reply via Email
-                              </a>
-                              <button
-                                onClick={() => handleDeleteMessage(selectedMessage.id)}
-                                className="px-5 py-3 bg-red-50 text-red-500 hover:bg-red-500 hover:text-white rounded-xl text-xs font-black uppercase tracking-widest transition-colors"
-                              >
-                                Delete
-                              </button>
-                            </div>
-                          </div>
-                        </motion.div>
-                      </div>
-                    )}
-                  </AnimatePresence>
-                </div>
-              )}
-
               {/* --- DIRECT LINKS (REDIRECTS) SECTION --- */}
               {activeSection === 'redirects' && (
                 <div className="space-y-6">
@@ -1520,63 +1249,9 @@ export const AdminPanel: React.FC = () => {
                   <RedirectsEditor config={config} updateField={updateField} />
                 </div>
               )}
-
-              {/* --- ADMINISTRATORS SECTION --- */}
-              {activeSection === 'admins' && <AdminsManager />}
-
-              {/* --- DATABASE CONFIG SECTION --- */}
-              {activeSection === 'database' && <DatabaseConfigEditor />}
-
-              {/* --- ACCOUNT SETTINGS SECTION --- */}
-              {activeSection === 'account' && <AccountSettingsEditor />}
             </motion.div>
           </AnimatePresence>
         </div>
-
-        {/* Custom Confirmation Modal for Message Deletion */}
-        <AnimatePresence>
-          {deleteConfirmId && (
-            <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                onClick={() => setDeleteConfirmId(null)}
-                className="absolute inset-0 bg-black/60 backdrop-blur-sm cursor-pointer"
-              />
-              <motion.div
-                initial={{ scale: 0.95, opacity: 0, y: 20 }}
-                animate={{ scale: 1, opacity: 1, y: 0 }}
-                exit={{ scale: 0.95, opacity: 0, y: 20 }}
-                className="bg-white rounded-3xl w-full max-w-sm border-2 border-black p-6 flex flex-col items-center text-center gap-6 relative z-10 overflow-hidden"
-              >
-                <div className="p-4 bg-red-50 border-2 border-black rounded-full text-red-500">
-                  <ShieldAlert size={36} strokeWidth={1.5} />
-                </div>
-                <div className="space-y-2">
-                  <h3 className="text-xl font-black tracking-tight">Delete Message</h3>
-                  <p className="text-sm text-neutral-500 font-medium leading-relaxed">
-                    Are you sure you want to delete this message? This action is permanent and cannot be undone.
-                  </p>
-                </div>
-                <div className="flex gap-3 w-full">
-                  <button
-                    onClick={() => setDeleteConfirmId(null)}
-                    className="flex-1 py-3 border-2 border-black rounded-xl text-xs font-black uppercase tracking-widest text-center hover:bg-neutral-100 transition-colors bg-white text-black"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    onClick={executeDeleteMessage}
-                    className="flex-1 py-3 bg-red-500 text-white rounded-xl text-xs font-black uppercase tracking-widest text-center border-2 border-black hover:bg-red-600 transition-colors"
-                  >
-                    Delete
-                  </button>
-                </div>
-              </motion.div>
-            </div>
-          )}
-        </AnimatePresence>
 
         {/* Floating Save Button */}
         <div className="fixed bottom-8 right-8 z-50">

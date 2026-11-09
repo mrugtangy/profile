@@ -5,15 +5,11 @@ import { createServer as createViteServer } from "vite";
 import multer from "multer";
 import serveIndex from "serve-index";
 import "dotenv/config";
-import apiRouter from "./server/api.js";
 
 const app = express();
 const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : 3000;
 
 app.use(express.json());
-
-// Mount API routes
-app.use("/api", apiRouter);
 
 const FILES_DIR = path.join(process.cwd(), "files");
 const LINKS_FILE = path.join(process.cwd(), "data", "links.json");
@@ -260,10 +256,7 @@ app.post("/api/files/content", async (req, res) => {
 async function startServer() {
   if (process.env.NODE_ENV !== "production") {
     const vite = await createViteServer({
-      server: { 
-        middlewareMode: true,
-        hmr: false,
-      },
+      server: { middlewareMode: true },
       appType: "spa",
     });
     app.use(vite.middlewares);
@@ -275,18 +268,8 @@ async function startServer() {
     });
   }
 
-  const server = app.listen(PORT, "0.0.0.0", () => {
+  app.listen(PORT, "0.0.0.0", () => {
     console.log(`Server running on http://localhost:${PORT}`);
-  });
-
-  server.on('error', (err: any) => {
-    if (err.code === 'EADDRINUSE') {
-      console.error(`Port ${PORT} is already in use.`);
-      process.exit(1);
-    } else {
-      console.error("Server unhandled error:", err);
-      process.exit(1);
-    }
   });
 }
 

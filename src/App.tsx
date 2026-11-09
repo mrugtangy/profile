@@ -27,17 +27,13 @@ import {
   BrowserRouter, 
   Routes, 
   Route, 
-  Navigate,
-  Link
+  Navigate 
 } from "react-router-dom";
 import { onAuthStateChanged, User as FirebaseUser } from "firebase/auth";
-import { auth, db } from "./firebase";
-import { collection, addDoc, serverTimestamp } from "firebase/firestore";
+import { auth } from "./firebase";
 import { subscribeToSettings } from "./services/configService";
 import { Login } from "./components/Admin/Login";
 import { AdminPanel } from "./components/Admin/AdminPanel";
-import { ConfigSetup } from "./components/ConfigSetup";
-import { authService } from "./services/authService";
 import { ErrorPage } from "./components/ErrorPage";
 import { DownloadPage } from "./components/DownloadPage";
 import { RedirectPage } from "./components/RedirectPage";
@@ -461,20 +457,9 @@ const ShoppingCard = ({ item, onClick }: { item: any; onClick: () => void }) => 
   </button>
 );
 
-
 const ContactSection = ({ config, globalConfig }: { config: any, globalConfig?: any }) => {
   const [emailVisible, setEmailVisible] = useState(false);
   const [revealing, setRevealing] = useState(false);
-  const [showContactForm, setShowContactForm] = useState(false);
-  
-  // Form states
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
-  const [subject, setSubject] = useState('');
-  const [messageText, setMessageText] = useState('');
-  const [sending, setSending] = useState(false);
-  const [sentSuccess, setSentSuccess] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
   const handleReveal = () => {
     setRevealing(true);
@@ -489,37 +474,6 @@ const ContactSection = ({ config, globalConfig }: { config: any, globalConfig?: 
     navigator.clipboard.writeText(text);
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!name || !email || !subject || !messageText) {
-      setError('All fields are required.');
-      return;
-    }
-    setSending(true);
-    setError(null);
-    try {
-      await addDoc(collection(db, 'messages'), {
-        name,
-        email,
-        subject,
-        message: messageText,
-        createdAt: serverTimestamp(),
-        read: false
-      });
-      setSentSuccess(true);
-      // Reset form
-      setName('');
-      setEmail('');
-      setSubject('');
-      setMessageText('');
-    } catch (err: any) {
-      console.error(err);
-      setError('Failed to send message. Please try again.');
-    } finally {
-      setSending(false);
-    }
-  };
-
   const siteKey = globalConfig?.configs?.turnstileSiteKey || config?.turnstileSiteKey || "1x00000000000000000000AA";
 
   return (
@@ -527,7 +481,7 @@ const ContactSection = ({ config, globalConfig }: { config: any, globalConfig?: 
       <div className="space-y-8">
         <div className="space-y-2">
           <label className="text-[10px] font-black uppercase text-neutral-400 tracking-widest flex items-center gap-2">
-            <Mail size={14} className="text-black" /> Direct Inbox
+            <Mail size={14} className="text-black" /> Email Address
           </label>
           <div className="group relative">
             <div className={`w-full ${emailVisible ? 'h-auto py-4' : revealing ? 'min-h-[72px] py-1' : 'h-16'} bg-neutral-50 border-2 border-black rounded-2xl flex items-center justify-center overflow-hidden transition-all duration-300`}>
@@ -576,15 +530,12 @@ const ContactSection = ({ config, globalConfig }: { config: any, globalConfig?: 
                       </button>
                     </div>
                     
-                    <button 
-                      onClick={() => {
-                        setSentSuccess(false);
-                        setShowContactForm(true);
-                      }}
+                    <a 
+                      href={`mailto:${config.email}`}
                       className="flex items-center gap-2 px-6 py-3 bg-black text-white rounded-xl text-xs font-black uppercase tracking-widest hover:scale-105 active:scale-95 transition-all w-full justify-center"
                     >
-                      <Send size={12} /> Send a Mail
-                    </button>
+                      <Mail size={14} /> Send Email
+                    </a>
                   </motion.div>
                 )}
               </AnimatePresence>
@@ -608,143 +559,6 @@ const ContactSection = ({ config, globalConfig }: { config: any, globalConfig?: 
           <CustomMarkdown className="text-black">{config.description}</CustomMarkdown>
         </div>
       </div>
-
-      {/* Message Composer Modal overlay */}
-      <AnimatePresence>
-        {showContactForm && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={() => setShowContactForm(false)}
-              className="absolute inset-0 bg-black/60 backdrop-blur-sm cursor-pointer"
-            />
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95, y: 10 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 10 }}
-              className="relative w-full max-w-md bg-white rounded-3xl p-6 sm:p-8 border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] flex flex-col z-10 text-left"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <button 
-                onClick={() => setShowContactForm(false)}
-                className="absolute top-4 right-4 p-2 hover:bg-neutral-100 rounded-full transition-colors border border-transparent hover:border-black"
-              >
-                <X size={18} />
-              </button>
-
-              <AnimatePresence mode="wait">
-                {!sentSuccess ? (
-                  <motion.form
-                    key="form"
-                    onSubmit={handleSubmit}
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    className="space-y-4"
-                  >
-                    <div className="flex items-center gap-2 mb-2 border-b border-neutral-100 pb-3">
-                      <Mail size={18} className="text-black" />
-                      <h3 className="text-lg font-black uppercase tracking-tight">Send a Mail</h3>
-                    </div>
-
-                    {error && (
-                      <div className="p-3 bg-red-50 border border-red-200 rounded-xl text-red-600 text-xs font-bold">
-                        {error}
-                      </div>
-                    )}
-
-                    <div className="space-y-1">
-                      <label className="text-[9px] font-black uppercase text-neutral-400 tracking-widest font-mono">Your Name</label>
-                      <input 
-                        type="text" 
-                        required
-                        value={name}
-                        onChange={(e) => setName(e.target.value)}
-                        placeholder="John Doe"
-                        className="w-full p-3 bg-neutral-50 border-2 border-neutral-100 rounded-xl focus:border-black transition-colors font-bold outline-none text-sm"
-                      />
-                    </div>
-
-                    <div className="space-y-1">
-                      <label className="text-[9px] font-black uppercase text-neutral-400 tracking-widest font-mono">Your Email</label>
-                      <input 
-                        type="email" 
-                        required
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        placeholder="john@example.com"
-                        className="w-full p-3 bg-neutral-50 border-2 border-neutral-100 rounded-xl focus:border-black transition-colors font-bold outline-none text-sm"
-                      />
-                    </div>
-
-                    <div className="space-y-1">
-                      <label className="text-[9px] font-black uppercase text-neutral-400 tracking-widest font-mono">Subject</label>
-                      <input 
-                        type="text" 
-                        required
-                        value={subject}
-                        onChange={(e) => setSubject(e.target.value)}
-                        placeholder="Inquiry / Feedback / Hello"
-                        className="w-full p-3 bg-neutral-50 border-2 border-neutral-100 rounded-xl focus:border-black transition-colors font-bold outline-none text-sm"
-                      />
-                    </div>
-
-                    <div className="space-y-1">
-                      <label className="text-[9px] font-black uppercase text-neutral-400 tracking-widest font-mono">Message</label>
-                      <textarea 
-                        required
-                        value={messageText}
-                        onChange={(e) => setMessageText(e.target.value)}
-                        placeholder="Write your message here..."
-                        rows={4}
-                        className="w-full p-3 bg-neutral-50 border-2 border-neutral-100 rounded-xl focus:border-black transition-colors font-bold outline-none text-sm resize-none"
-                      />
-                    </div>
-
-                    <button
-                      type="submit"
-                      disabled={sending}
-                      className="w-full py-3 sm:py-4 bg-black text-white rounded-xl font-bold uppercase tracking-widest text-xs hover:bg-neutral-800 transition-colors flex items-center justify-center gap-2 mt-4"
-                    >
-                      {sending ? (
-                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                      ) : (
-                        <>
-                          <Send size={14} /> Send Message
-                        </>
-                      )}
-                    </button>
-                  </motion.form>
-                ) : (
-                  <motion.div
-                    key="success"
-                    initial={{ opacity: 0, scale: 0.95 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.95 }}
-                    className="flex flex-col items-center text-center py-8"
-                  >
-                    <div className="w-16 h-16 bg-green-50 text-green-500 rounded-full flex items-center justify-center border-2 border-green-200 mb-6">
-                      <Check size={32} />
-                    </div>
-                    <h3 className="text-xl font-black uppercase tracking-tight mb-2">Message Sent!</h3>
-                    <p className="text-sm font-medium text-neutral-500 mb-8 max-w-xs leading-relaxed">
-                      Thank you for reaching out. Your message has been sent successfully!
-                    </p>
-                    <button
-                      onClick={() => setShowContactForm(false)}
-                      className="px-8 py-3 bg-black text-white rounded-xl font-bold uppercase tracking-widest text-xs hover:bg-neutral-800 transition-colors"
-                    >
-                      Close Window
-                    </button>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
     </div>
   );
 };
@@ -860,19 +674,6 @@ function MainApp({ config, loading, user }: { config: any, loading: boolean, use
   const [selectedCard, setSelectedCard] = useState<any>(null);
   const [easterEggCount, setEasterEggCount] = useState(0);
   const [easterEggPhase, setEasterEggPhase] = useState<"dots" | "life" | "quote" | "love" | "smile">("dots");
-  const [isAdminLoggedIn, setIsAdminLoggedIn] = useState(false);
-
-  useEffect(() => {
-    const checkAdmin = async () => {
-      try {
-        const adminUser = await authService.getCurrentUser();
-        setIsAdminLoggedIn(!!adminUser);
-      } catch {
-        setIsAdminLoggedIn(false);
-      }
-    };
-    checkAdmin();
-  }, []);
 
   const handleEasterEgg = useCallback(() => {
     if (easterEggCount === 0) {
@@ -906,11 +707,11 @@ function MainApp({ config, loading, user }: { config: any, loading: boolean, use
 
   return (
     <div className="min-h-screen flex flex-col items-center overflow-x-hidden transition-colors duration-500 bg-white relative">
-      {isAdminLoggedIn && (
+      {user && (user.email === 'shivamkumarsumoreeah@gmail.com' || user.email === 'hello.shivamksu@gmail.com') && (
         <div className="absolute top-4 right-4 z-50">
-          <Link to="/admin" className="px-4 py-2 bg-black text-white rounded-xl text-xs font-black uppercase tracking-widest hover:scale-105 transition-transform border-2 border-white shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
+          <a href="/admin" className="px-4 py-2 bg-black text-white rounded-xl text-xs font-black uppercase tracking-widest hover:scale-105 transition-transform border-2 border-white">
             Admin Panel
-          </Link>
+          </a>
         </div>
       )}
       
@@ -1244,127 +1045,6 @@ function MainApp({ config, loading, user }: { config: any, loading: boolean, use
   );
 }
 
-const AdminRoute = () => {
-  const [loading, setLoading] = useState(true);
-  const [isAuth, setIsAuth] = useState(false);
-  const [isConfigured, setIsConfigured] = useState(true);
-
-  useEffect(() => {
-    const check = async () => {
-      try {
-        const configured = await authService.isConfigured();
-        setIsConfigured(configured);
-        if (!configured) {
-          setLoading(false);
-          return;
-        }
-        const user = await authService.getCurrentUser();
-        setIsAuth(!!user);
-      } catch {
-        setIsAuth(false);
-      } finally {
-        setLoading(false);
-      }
-    };
-    check();
-  }, []);
-
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-neutral-50">
-        <div className="w-8 h-8 border-4 border-black border-t-transparent rounded-full animate-spin" />
-      </div>
-    );
-  }
-
-  if (!isConfigured) {
-    return <Navigate to="/admin/setup" replace />;
-  }
-
-  if (!isAuth) {
-    return <Navigate to="/admin/login" replace />;
-  }
-
-  return <AdminPanel />;
-};
-
-const LoginRoute = () => {
-  const [loading, setLoading] = useState(true);
-  const [isAuth, setIsAuth] = useState(false);
-  const [isConfigured, setIsConfigured] = useState(true);
-
-  useEffect(() => {
-    const check = async () => {
-      try {
-        const configured = await authService.isConfigured();
-        setIsConfigured(configured);
-        if (!configured) {
-          setLoading(false);
-          return;
-        }
-        const user = await authService.getCurrentUser();
-        setIsAuth(!!user);
-      } catch {
-        setIsAuth(false);
-      } finally {
-        setLoading(false);
-      }
-    };
-    check();
-  }, []);
-
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-neutral-50">
-        <div className="w-8 h-8 border-4 border-black border-t-transparent rounded-full animate-spin" />
-      </div>
-    );
-  }
-
-  if (!isConfigured) {
-    return <Navigate to="/admin/setup" replace />;
-  }
-
-  if (isAuth) {
-    return <Navigate to="/admin" replace />;
-  }
-
-  return <Login />;
-};
-
-const SetupRoute = () => {
-  const [loading, setLoading] = useState(true);
-  const [isConfigured, setIsConfigured] = useState(false);
-
-  useEffect(() => {
-    const check = async () => {
-      try {
-        const configured = await authService.isConfigured();
-        setIsConfigured(configured);
-      } catch {
-        setIsConfigured(false);
-      } finally {
-        setLoading(false);
-      }
-    };
-    check();
-  }, []);
-
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-neutral-50">
-        <div className="w-8 h-8 border-4 border-black border-t-transparent rounded-full animate-spin" />
-      </div>
-    );
-  }
-
-  if (isConfigured) {
-    return <Navigate to="/admin/login" replace />;
-  }
-
-  return <ConfigSetup onComplete={() => window.location.href = '/admin/login'} />;
-};
-
 export default function App() {
   const [user, setUser] = useState<FirebaseUser | null>(null);
   const [authLoading, setAuthLoading] = useState(true);
@@ -1461,9 +1141,22 @@ export default function App() {
             <Routes>
               <Route path="/" element={<MainApp config={config} loading={configLoading} user={user} />} />
               <Route path="/download/:id" element={<DownloadPage />} />
-              <Route path="/admin" element={<AdminRoute />} />
-              <Route path="/admin/login" element={<LoginRoute />} />
-              <Route path="/admin/setup" element={<SetupRoute />} />
+              <Route 
+                path="/admin" 
+                element={
+                  user && (user.email === 'shivamkumarsumoreeah@gmail.com' || user.email === 'hello.shivamksu@gmail.com') 
+                    ? <AdminPanel /> 
+                    : <Navigate to="/admin/login" />
+                } 
+              />
+              <Route 
+                path="/admin/login" 
+                element={
+                  user && (user.email === 'shivamkumarsumoreeah@gmail.com' || user.email === 'hello.shivamksu@gmail.com') 
+                    ? <Navigate to="/admin" /> 
+                    : <Login />
+                } 
+              />
               
               {/* Error Pages for preview */}
               <Route path="/400" element={<ErrorPage code={400} message={config?.errorPages?.['400']} />} />

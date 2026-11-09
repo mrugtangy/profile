@@ -99,30 +99,12 @@
           }
         }
       }
-    },
-    "Message": {
-      "title": "Contact Message",
-      "description": "Message sent via the direct inbox contact form",
-      "type": "object",
-      "properties": {
-        "name": { "type": "string" },
-        "email": { "type": "string" },
-        "subject": { "type": "string" },
-        "message": { "type": "string" },
-        "createdAt": { "type": "string", "format": "date-time" },
-        "read": { "type": "boolean" }
-      },
-      "required": ["name", "email", "subject", "message", "createdAt"]
     }
   },
   "firestore": {
     "/settings/config": {
       "schema": "AppConfig",
       "description": "The primary configuration document for the application"
-    },
-    "/messages/{messageId}": {
-      "schema": "Message",
-      "description": "Collection of incoming contact messages"
     }
   }
 }
